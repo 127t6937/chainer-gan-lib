@@ -10,6 +10,8 @@ class Updater(chainer.training.StandardUpdater):
         self.gen, self.dis = kwargs.pop('models')
         self.n_dis = kwargs.pop('n_dis')
         self.lam = kwargs.pop('lam')
+        self.dcgan = kwargs.pop('dcgan')
+
         super(Updater, self).__init__(*args, **kwargs)
 
     def update_core(self):
@@ -70,23 +72,30 @@ class Updater(chainer.training.StandardUpdater):
             x_fake1.unchain_backward()
             x_fake2.unchain_backward()
 
-            eps = xp.random.uniform(0, 1, size=batchsize).astype("f")[:, None, None, None]
-            x_mid = eps * x_real + (1.0 - eps) * x_fake1
-            h_mid = Variable(self.dis(x_mid).data)
-            critic_mid = critic(h_mid, h_fake2.data)
 
             # calc gradient penalty
-            g = Variable(xp.ones_like(critic_mid.data))
-            dydh, _ = backward_critic(g, h_mid, h_fake2.data)
-            dydx = self.dis.differentiable_backward(dydh)
-            dydx_norm = F.sqrt(F.sum(dydx ** 2, axis=(1, 2, 3)))
-            loss_gp = self.lam * F.mean_squared_error(dydx_norm, xp.ones_like(dydx_norm.data))
+            if self.dcgan == True:
+                eps = xp.random.uniform(0, 1, size=batchsize).astype("f")[:, None, None, None]
+                x_mid = eps * x_real + (1.0 - eps) * x_fake1
+                h_mid = Variable(self.dis(x_mid).data)
+                critic_mid = critic(h_mid, h_fake2.data)
 
-            self.dis.cleargrads()
-            (-loss_surrogate).backward()
-            loss_gp.backward()
-            dis_optimizer.update()
+                g = Variable(xp.ones_like(critic_mid.data))
+                dydh, _ = backward_critic(g, h_mid, h_fake2.data)
+                dydx = self.dis.differentiable_backward(dydh)
+                dydx_norm = F.sqrt(F.sum(dydx ** 2, axis=(1, 2, 3)))
+                loss_gp = self.lam * F.mean_squared_error(dydx_norm, xp.ones_like(dydx_norm.data))
 
-            chainer.reporter.report({'loss_dis': loss_surrogate})
-            chainer.reporter.report({'loss_gp': loss_gp})
-            chainer.reporter.report({'g': F.mean(dydx_norm)})
+                self.dis.cleargrads()
+                (-loss_surrogate).backward()
+                loss_gp.backward()
+                dis_optimizer.update()
+
+                chainer.reporter.report({'loss_dis': loss_surrogate})
+                chainer.reporter.report({'loss_gp': loss_gp})
+                chainer.reporter.report({'g': F.mean(dydx_norm)})
+            else:
+                self.dis.cleargrads()
+                (-loss_surrogate).backward()
+                dis_optimizer.update()
+                chainer.reporter.report({'loss_dis': loss_surrogate})
