@@ -177,8 +177,8 @@ def main():
     # Set up logging
     trainer.extend(extensions.snapshot(),trigger=(args.snapshot_interval, 'iteration'))
     for m in models:
-        trainer.extend(extensions.snapshot_object(
-            m, m.__class__.__name__ + '_{.updater.iteration}.npz'), trigger=(args.snapshot_interval, 'iteration'))
+   #     trainer.extend(extensions.snapshot_object(
+   #         m, m.__class__.__name__ + '_{.updater.iteration}.npz'), trigger=(args.snapshot_interval, 'iteration'))
     trainer.extend(extensions.LogReport(keys=report_keys,
                                         trigger=(args.display_interval, 'iteration')))
     trainer.extend(extensions.PrintReport(report_keys), trigger=(args.display_interval, 'iteration'))
