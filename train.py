@@ -14,6 +14,9 @@ from common.evaluation import sample_generate, sample_generate_light, calc_incep
 from common.record import record_setting
 import common.net
 
+"chainer.cuda.set_max_workspace_size(512 * 1024 * 1024)\n",
+"chainer.config.autotune = True"
+
 def make_optimizer(model, alpha, beta1, beta2):
     optimizer = chainer.optimizers.Adam(alpha=alpha, beta1=beta1, beta2=beta2)
     optimizer.setup(model)
@@ -27,8 +30,8 @@ def main():
     parser.add_argument('--max_iter', type=int, default=100000)
     parser.add_argument('--gpu', '-g', type=int, default=0, help='GPU ID (negative value indicates CPU)')
     parser.add_argument('--out', '-o', default='result', help='Directory to output the result')
-    parser.add_argument('--snapshot_interval', type=int, default=10000, help='Interval of snapshot')
-    parser.add_argument('--evaluation_interval', type=int, default=10000, help='Interval of evaluation')
+    parser.add_argument('--snapshot_interval', type=int, default=1000, help='Interval of snapshot')
+    parser.add_argument('--evaluation_interval', type=int, default=100000, help='Interval of evaluation')
     parser.add_argument('--display_interval', type=int, default=100, help='Interval of displaying log to console')
     parser.add_argument('--n_dis', type=int, default=5, help='number of discriminator update per generator update')
     parser.add_argument('--gamma', type=float, default=0.5, help='hyperparameter gamma')
@@ -112,8 +115,13 @@ def main():
     elif args.algorithm == "cramer":
         from cramer.updater import Updater
         if args.architecture=="dcgan":
+            updater_args["dcgan"] = True
             generator = common.net.DCGANGenerator()
             discriminator = common.net.WGANDiscriminator(output_dim=args.output_dim)
+        elif args.architecture == "sndcgan":
+            updater_args["dcgan"] = False
+            generator = common.net.DCGANGenerator()
+            discriminator = common.net.SNDCGANDiscriminator(output_dim=args.output_dim)
         else:
             raise NotImplementedError()
         models = [generator, discriminator]
@@ -167,15 +175,16 @@ def main():
     trainer = training.Trainer(updater, (args.max_iter, 'iteration'), out=args.out)
 
     # Set up logging
+    trainer.extend(extensions.snapshot(),trigger=(args.snapshot_interval, 'iteration'))
     for m in models:
         trainer.extend(extensions.snapshot_object(
             m, m.__class__.__name__ + '_{.updater.iteration}.npz'), trigger=(args.snapshot_interval, 'iteration'))
     trainer.extend(extensions.LogReport(keys=report_keys,
                                         trigger=(args.display_interval, 'iteration')))
     trainer.extend(extensions.PrintReport(report_keys), trigger=(args.display_interval, 'iteration'))
-    trainer.extend(sample_generate(generator, args.out), trigger=(args.evaluation_interval, 'iteration'),
+    trainer.extend(sample_generate(generator, args.out), trigger=(args.snapshot_interval, 'iteration'),
                    priority=extension.PRIORITY_WRITER)
-    trainer.extend(sample_generate_light(generator, args.out), trigger=(args.evaluation_interval // 10, 'iteration'),
+    trainer.extend(sample_generate_light(generator, args.out), trigger=(args.snapshot_interval // 10, 'iteration'),
                    priority=extension.PRIORITY_WRITER)
     trainer.extend(calc_inception(generator), trigger=(args.evaluation_interval, 'iteration'),
                    priority=extension.PRIORITY_WRITER)
