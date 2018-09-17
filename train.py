@@ -190,7 +190,7 @@ def main():
                    priority=extension.PRIORITY_WRITER)
     trainer.extend(calc_FID(generator), trigger=(args.evaluation_interval, 'iteration'),
                    priority=extension.PRIORITY_WRITER)
-    trainer.extend(extensions.ProgressBar(update_interval=10))
+    #trainer.extend(extensions.ProgressBar(update_interval=10))
 
     # Run the training
     trainer.run()
