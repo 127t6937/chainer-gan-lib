@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--gpu', '-g', type=int, default=0, help='GPU ID (negative value indicates CPU)')
     parser.add_argument('--out', '-o', default='result', help='Directory to output the result')
     parser.add_argument('--snapshot_interval', type=int, default=20000, help='Interval of snapshot')
-    parser.add_argument('--evaluation_interval', type=int, default=200000, help='Interval of evaluation')
+    parser.add_argument('--evaluation_interval', type=int, default=180001, help='Interval of evaluation')
     parser.add_argument('--display_interval', type=int, default=200, help='Interval of displaying log to console')
     parser.add_argument('--n_dis', type=int, default=5, help='number of discriminator update per generator update')
     parser.add_argument('--gamma', type=float, default=0.5, help='hyperparameter gamma')
@@ -199,8 +199,8 @@ def main():
     trainer.extend(extensions.ProgressBar(update_interval=10))
 
     # Run the training
-    chainer.cuda.memory_pool.free_all_blocks()
-    trainer.extend((calc_inception(generator)))
+    
+    trainer.extend((calc_inception(generator)),trigger=(args.evaluation_interval, 'iteration'))
     trainer.run()
 
 
