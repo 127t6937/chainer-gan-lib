@@ -176,7 +176,7 @@ def main():
 
     from chainer import serializers
 
-    serializers.load_npz('/home/sy/PycharmProjects/chainer-gan-lib/result_sncramer/DCGANGenerator_180000.npz',generator,strict=False)
+    serializers.load_npz('~/chainer-gan-lib/DCGANGenerator_180000.npz',generator,strict=False)
 
 
     # Set up logging
