@@ -203,6 +203,7 @@ def main():
     #trainer.extend((calc_inception(generator)),trigger=(args.evaluation_interval, 'iteration'))
     trainer.extend((calc_inception(generator)))
     trainer.extend(extensions.PrintReport(report_keys))
+                                       
     trainer.run()
 
 
