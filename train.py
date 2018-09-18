@@ -187,7 +187,7 @@ def main():
         #trigger = (args.snapshot_interval, 'iteration')
     trainer.extend(extensions.LogReport(keys=report_keys,
                                         trigger=(args.display_interval, 'iteration')))
-    trainer.extend(extensions.PrintReport(report_keys), trigger=(args.display_interval, 'iteration'))
+   # trainer.extend(extensions.PrintReport(report_keys), trigger=(args.display_interval, 'iteration'))
     trainer.extend(sample_generate(generator, args.out), trigger=(args.snapshot_interval, 'iteration'),
                    priority=extension.PRIORITY_WRITER)
     trainer.extend(sample_generate_light(generator, args.out), trigger=(args.snapshot_interval // 10, 'iteration'),
@@ -200,7 +200,9 @@ def main():
 
     # Run the training
     
-    trainer.extend((calc_inception(generator)),trigger=(args.evaluation_interval, 'iteration'))
+    #trainer.extend((calc_inception(generator)),trigger=(args.evaluation_interval, 'iteration'))
+    trainer.extend((calc_inception(generator)))
+    trainer.extend(extensions.PrintReport(report_keys))
     trainer.run()
 
 
