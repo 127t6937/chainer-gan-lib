@@ -185,8 +185,8 @@ def main():
         trainer.extend(extensions.snapshot_object(
             m, m.__class__.__name__ + '_{.updater.iteration}.npz'), trigger=(args.snapshot_interval, 'iteration'))
         #trigger = (args.snapshot_interval, 'iteration')
-    trainer.extend(extensions.LogReport(keys=report_keys,
-                                        trigger=(args.display_interval, 'iteration')))
+    #trainer.extend(extensions.LogReport(keys=report_keys,
+     #                                   trigger=(args.display_interval, 'iteration')))
    # trainer.extend(extensions.PrintReport(report_keys), trigger=(args.display_interval, 'iteration'))
     trainer.extend(sample_generate(generator, args.out), trigger=(args.snapshot_interval, 'iteration'),
                    priority=extension.PRIORITY_WRITER)
@@ -203,6 +203,7 @@ def main():
     #trainer.extend((calc_inception(generator)),trigger=(args.evaluation_interval, 'iteration'))
     trainer.extend((calc_inception(generator)))
     trainer.extend(extensions.PrintReport(report_keys))
+    trainer.extend(extensions.LogReport(keys=report_keys))
                                        
     trainer.run()
 
