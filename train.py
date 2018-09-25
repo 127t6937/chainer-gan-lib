@@ -26,13 +26,13 @@ def main():
     parser = argparse.ArgumentParser(description='Train script')
     parser.add_argument('--algorithm', '-a', type=str, default="dcgan", help='GAN algorithm')
     parser.add_argument('--architecture', type=str, default="dcgan", help='Network architecture')
-    parser.add_argument('--batchsize', type=int, default=32)
-    parser.add_argument('--max_iter', type=int, default=1)
+    parser.add_argument('--batchsize', type=int, default=64)
+    parser.add_argument('--max_iter', type=int, default=100000)
     parser.add_argument('--gpu', '-g', type=int, default=0, help='GPU ID (negative value indicates CPU)')
     parser.add_argument('--out', '-o', default='result', help='Directory to output the result')
-    parser.add_argument('--snapshot_interval', type=int, default=20000, help='Interval of snapshot')
-    parser.add_argument('--evaluation_interval', type=int, default=1, help='Interval of evaluation')
-    parser.add_argument('--display_interval', type=int, default=1, help='Interval of displaying log to console')
+    parser.add_argument('--snapshot_interval', type=int, default=10000, help='Interval of snapshot')
+    parser.add_argument('--evaluation_interval', type=int, default=10000, help='Interval of evaluation')
+    parser.add_argument('--display_interval', type=int, default=100, help='Interval of displaying log to console')
     parser.add_argument('--n_dis', type=int, default=5, help='number of discriminator update per generator update')
     parser.add_argument('--gamma', type=float, default=0.5, help='hyperparameter gamma')
     parser.add_argument('--lam', type=float, default=10, help='gradient penalty')
@@ -176,7 +176,7 @@ def main():
 
     from chainer import serializers
 
-    serializers.load_npz('/content/chainer-gan-lib/DCGANGenerator_100000.npz',generator,strict=False)
+    #serializers.load_npz('/content/chainer-gan-lib/DCGANGenerator_100000.npz',generator,strict=False)
 
 
     # Set up logging
@@ -194,19 +194,14 @@ def main():
                    priority=extension.PRIORITY_WRITER)
     trainer.extend(calc_inception(generator), trigger=(args.evaluation_interval, 'iteration'),
                    priority=extension.PRIORITY_WRITER)
-    #trainer.extend(calc_FID(generator), trigger=(args.evaluation_interval, 'iteration'),
-    #               priority=extension.PRIORITY_WRITER)
+    trainer.extend(calc_FID(generator), trigger=(args.evaluation_interval, 'iteration'),
+                   priority=extension.PRIORITY_WRITER)
     trainer.extend(extensions.ProgressBar(update_interval=10))
 
     # Run the training
     
     #trainer.extend((calc_inception(generator)),trigger=(args.evaluation_interval, 'iteration'))
-    
-   
-                                       
     trainer.run()
-
-
 
 if __name__ == '__main__':
     main()
